@@ -363,16 +363,58 @@ def render_preview(
     background_data_url: str | None,
 ) -> None:
     caption = str(st.session_state.get("caption_buffer", ""))
+    previous = _track_caption_transition(caption)
     st.subheader("Preview")
 
+    previous_text, leaving_text = previous
     if preview_mode == "Fullscreen overlay":
         components.html(
-            render_overlay(caption, style, background_data_url),
+            render_overlay(
+                caption,
+                style,
+                background_data_url,
+                previous_text=previous_text,
+                leaving_text=leaving_text,
+            ),
             height=720,
             scrolling=False,
         )
     else:
-        st.markdown(render_band(caption, style), unsafe_allow_html=True)
+        st.markdown(
+            render_band(
+                caption,
+                style,
+                previous_text=previous_text,
+                leaving_text=leaving_text,
+            ),
+            unsafe_allow_html=True,
+        )
+
+
+def _track_caption_transition(current: str) -> tuple[str, str]:
+    """Return (previous, leaving) caption text for the fade-up animation.
+
+    Keeps a short rolling history so the dimmed previous line stays visible
+    until a third caption arrives, at which point the oldest line gets the
+    exit animation as the new one slides in.
+    """
+
+    history = list(st.session_state.get("_caption_history", []))
+    current_norm = current.strip()
+
+    if not current_norm:
+        st.session_state["_caption_history"] = []
+        return "", ""
+
+    last = history[-1] if history else ""
+    if current_norm != last:
+        history.append(current_norm)
+        history = history[-3:]
+        st.session_state["_caption_history"] = history
+
+    previous = history[-2] if len(history) >= 2 else ""
+    leaving = history[-3] if len(history) >= 3 else ""
+    return previous, leaving
 
 
 def sync_mode_state(mode: str, transcript: str, max_words: int) -> None:

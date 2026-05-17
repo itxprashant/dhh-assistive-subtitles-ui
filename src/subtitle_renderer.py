@@ -12,13 +12,23 @@ from src.config import SubtitleStyle, hex_to_rgba
 EMPTY_CAPTION = "Captions will appear here"
 
 
-def render_band(text: str, style: SubtitleStyle) -> str:
+def render_band(
+    text: str,
+    style: SubtitleStyle,
+    *,
+    previous_text: str = "",
+    leaving_text: str = "",
+) -> str:
     """Return HTML for the in-page subtitle band preview."""
 
     caption = _caption_text(text)
     anchor_rule = _anchor_rule(style)
     background = hex_to_rgba(style.background_color, style.background_opacity)
-    muted_class = " is-empty" if not text.strip() else ""
+    is_empty = not text.strip()
+    muted_class = " is-empty" if is_empty else ""
+    previous_html, leaving_html = _history_lines_html(
+        text, previous_text, leaving_text, hidden=is_empty
+    )
 
     return f"""
 <style>
@@ -64,20 +74,7 @@ def render_band(text: str, style: SubtitleStyle) -> str:
         box-shadow: 0 18px 56px rgba(0, 0, 0, 0.28);
         backdrop-filter: blur(10px);
     }}
-    .subtitle-text {{
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        min-height: calc({style.max_lines} * {style.line_height}em);
-        max-height: calc({style.max_lines} * {style.line_height}em);
-        overflow: hidden;
-        text-align: center;
-    }}
-    .subtitle-text > span {{
-        display: block;
-        width: 100%;
-        word-break: break-word;
-    }}
+    {_caption_stack_css(style)}
     .subtitle-band.is-empty {{
         color: rgba(255,255,255,0.62);
         font-style: italic;
@@ -89,7 +86,9 @@ def render_band(text: str, style: SubtitleStyle) -> str:
         Subtitle band preview<br>
         Tuned for projector visibility and low visual interruption.
     </div>
-    <div class="subtitle-band{muted_class}"><div class="subtitle-text"><span>{caption}</span></div></div>
+    <div class="subtitle-band{muted_class}">
+        <div class="subtitle-text">{leaving_html}{previous_html}<span class="caption-line is-current">{caption}</span></div>
+    </div>
 </div>
 """
 
@@ -98,13 +97,20 @@ def render_overlay(
     text: str,
     style: SubtitleStyle,
     background_data_url: str | None = None,
+    *,
+    previous_text: str = "",
+    leaving_text: str = "",
 ) -> str:
     """Return a full-screen HTML mock that resembles an HDMI subtitle overlay."""
 
     caption = _caption_text(text)
     anchor_rule = _anchor_rule(style)
     background = hex_to_rgba(style.background_color, style.background_opacity)
-    muted_class = " is-empty" if not text.strip() else ""
+    is_empty = not text.strip()
+    muted_class = " is-empty" if is_empty else ""
+    previous_html, leaving_html = _history_lines_html(
+        text, previous_text, leaving_text, hidden=is_empty
+    )
     background_rule = (
         f"background-image: url('{background_data_url}');"
         if background_data_url
@@ -172,20 +178,7 @@ def render_overlay(
             box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
             backdrop-filter: blur(12px);
         }}
-        .overlay-subtitle-text {{
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            min-height: calc({style.max_lines} * {style.line_height}em);
-            max-height: calc({style.max_lines} * {style.line_height}em);
-            overflow: hidden;
-            text-align: center;
-        }}
-        .overlay-subtitle-text > span {{
-            display: block;
-            width: 100%;
-            word-break: break-word;
-        }}
+        {_caption_stack_css(style, scope=".overlay-subtitle-text")}
         .overlay-subtitle.is-empty {{
             color: rgba(255,255,255,0.62);
             font-style: italic;
@@ -209,7 +202,9 @@ def render_overlay(
 <body>
     <main class="projector-canvas">{slide_content}</main>
     <div class="preview-label">Overlay preview</div>
-    <div class="overlay-subtitle{muted_class}"><div class="overlay-subtitle-text"><span>{caption}</span></div></div>
+    <div class="overlay-subtitle{muted_class}">
+        <div class="overlay-subtitle-text">{leaving_html}{previous_html}<span class="caption-line is-current">{caption}</span></div>
+    </div>
 </body>
 </html>
 """
@@ -246,6 +241,95 @@ def image_file_to_data_url(file: BinaryIO | bytes | Path | str | None) -> str | 
 
 def _caption_text(text: str) -> str:
     return html.escape(text.strip() or EMPTY_CAPTION)
+
+
+def _history_lines_html(
+    current: str,
+    previous: str,
+    leaving: str,
+    *,
+    hidden: bool,
+) -> tuple[str, str]:
+    """Render the dimmed previous line and the outgoing leaving line."""
+
+    if hidden:
+        return "", ""
+
+    current_norm = current.strip()
+    previous_norm = previous.strip()
+    leaving_norm = leaving.strip()
+
+    previous_html = ""
+    if previous_norm and previous_norm != current_norm:
+        previous_html = (
+            f'<span class="caption-line is-previous">'
+            f'{html.escape(previous_norm)}</span>'
+        )
+
+    leaving_html = ""
+    if (
+        leaving_norm
+        and leaving_norm != current_norm
+        and leaving_norm != previous_norm
+    ):
+        leaving_html = (
+            f'<span class="caption-line is-leaving">'
+            f'{html.escape(leaving_norm)}</span>'
+        )
+
+    return previous_html, leaving_html
+
+
+def _caption_stack_css(style: SubtitleStyle, *, scope: str = ".subtitle-text") -> str:
+    """Shared CSS for the Spotify-style fade-up caption stack."""
+
+    height_rule = f"calc({style.max_lines} * {style.line_height}em)"
+    line_rule = f"{style.line_height}em"
+    return f"""
+    {scope} {{
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: {height_rule};
+        max-height: {height_rule};
+        overflow: hidden;
+        text-align: center;
+    }}
+    {scope} .caption-line {{
+        display: block;
+        width: 100%;
+        word-break: break-word;
+        will-change: transform, opacity, filter;
+        transform-origin: center bottom;
+    }}
+    {scope} .caption-line.is-current {{
+        opacity: 1;
+        animation: caption-rise-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }}
+    {scope} .caption-line.is-previous {{
+        opacity: 0.42;
+        animation: caption-rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }}
+    {scope} .caption-line.is-leaving {{
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: {line_rule};
+        opacity: 0;
+        pointer-events: none;
+        animation: caption-rise-out 560ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }}
+    @keyframes caption-rise-in {{
+        0%   {{ opacity: 0; transform: translateY(95%); filter: blur(2px); }}
+        55%  {{ filter: blur(0); }}
+        100% {{ transform: translateY(0); filter: blur(0); }}
+    }}
+    @keyframes caption-rise-out {{
+        0%   {{ opacity: 0.42; transform: translateY(0); filter: blur(0); }}
+        100% {{ opacity: 0; transform: translateY(-110%); filter: blur(3px); }}
+    }}
+    """
 
 
 def _anchor_rule(style: SubtitleStyle) -> str:
