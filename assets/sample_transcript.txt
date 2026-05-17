@@ -1,0 +1,7 @@
+Good morning everyone. Today we will discuss how reaction rates change when temperature and concentration vary inside a chemical reactor.
+
+The main idea is that a small delay in observing the response can make a system appear stable even when the underlying dynamics are becoming unstable.
+
+For accessibility, real-time captions should stay close to the speaker's timing, use short readable lines, and avoid covering important slide content.
+
+In the final device, the instructor will continue teaching normally while the subtitle band appears at the bottom of the projected screen.

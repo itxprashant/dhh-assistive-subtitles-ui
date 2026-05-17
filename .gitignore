@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.DS_Store
+
+# Local model caches can grow quickly.
+models/
+.cache/
+hf_cache/
+
+# Streamlit local state.
+.streamlit/secrets.toml
+
+
+AGENTS.md

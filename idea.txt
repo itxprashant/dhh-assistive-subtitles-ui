@@ -1,0 +1,74 @@
+
+Problem Statement
+Hearing impairment is among the most common disabilities in India, yet deaf and hard-of-hearing (DHH) students in higher education remain critically underserved. At IIT Delhi, for DHH students depend on sign language interpreters: a support model that is expensive, availability-constrained, and introduces perceptual lag that disrupts learning. In classroom lectures, Microsoft (ppt) captioning is typically used. However, the technology performs poorly, with limited speech-to-text accuracy, making lectures at IITD largely inaccessible for students with hearing disability. No real-time, classroom-native captioning solution exists at the institute today. This is the reality across Higher Education Institutions in the country, despite the accessibility mandate under the RPwD Act 2016. This proposal aims to build a technology to change that.
+
+Project Overview
+In this project, we propose to build a standalone, plug-and-play device. A wireless microphone captures the instructor's speech. An on-device compute unit processes it through a fine-tuned speech-to-text model and a language post-processing layer. The resulting captions appear as a floating subtitle band at the bottom of whatever is already projected, without replacing or interrupting the existing content.
+
+No internet. No cloud. No subscription cost. No change to how instructors teach.
+
+Because it runs entirely on local hardware, it requires no data centre, no remote servers, and no energy-intensive cloud infrastructure. This makes it both a privacy-first and a low-carbon solution, in line with the growing global conversation around Green AI and responsible computing.
+
+Novelty of the Speech Recognition System
+Why existing tools fall short
+    • Commercial STT services: require persistent internet, route audio through external servers, and fail on Indian-accented English and technical academic vocabulary.
+    • Generic open-source models (e.g. Whisper large-v3): are trained predominantly on Western English and produce high word-error rates on Indian-accented speech and technical academic vocabulary.
+    • No existing captioning product: composites output directly onto an HDMI signal as a native overlay layer. All current tools treat captioning as a separate screen output.
+
+What We Will Build
+    • Domain-adapted STT model: fine-tuned on academic lecture audio to improve accuracy on discipline-specific vocabulary and Indian-accented English, which base models handle poorly.
+    • Two-stage pipeline: STT output is passed through a 2B-parameter language model for real-time grammar correction, punctuation, and formatting. Single-model approaches cannot match this output quality.
+    • Sub-1.5s end-to-end latency: the full pipeline, from audio capture to caption display, is engineered to run within the perceptual synchrony threshold for DHH viewers.
+    • HDMI-native overlay: captions are composited directly onto the projector signal. No second screen. No separate device for the DHH student. No action required from the instructor.
+
+Hardware: Why a Refurbished Mac Mini M2 Pro
+For prototyping our software, the Mac Mini M2 Pro is the only compact platform that can run a 1B-parameter STT model and a 2B-parameter LLM simultaneously within our latency budget, due to its unified memory architecture (16GB shared across CPU, GPU, and Neural Engine at 100GB/s). No driver setup. No SDK configuration. Development begins on Day 1.
+
+We are deliberately choosing a certified refurbished unit. This is both a financial and an ethical decision: refurbished hardware costs 40% less than new, carries a warranty, and extends the useful life of a device that would otherwise have been discarded. Sustainability is a core principle of this device, from the local AI inference model that eliminates data centre energy costs, to the hardware choices we make at every stage.
+
+
+
+
+Budget Justification  |  Phase 1  |  Oct 2026 to Mar 2027
+All lab access, compute, and faculty mentorship are contributed at no cost. Stipends are benchmarked to the standard JRF base rate (Rs.12,000/member/month); no HRA or TA is claimed. The 6-month phase runs through the financial year deadline of 31 March 2027.
+
+	Item	Cost (INR)	Justification
+A	Refurbished Mac Mini M2 Pro (16GB)	₹52,000	Primary compute unit. Certified refurb with warranty; retained through Phase 2.
+	HDMI Capture Card	₹6,000	Captures projector signal for overlay pipeline. Reusable asset.
+	HDMI Splitter + Output Cables	₹2,500	Routes projector signal through the device without disrupting output.
+	USB Audio Interface	₹6,500	Clean analogue-to-digital conversion; essential for low-noise STT input.
+	Wireless Lapel Microphone System	₹8,000	Captures instructor speech reliably across varied room acoustics.
+	External USB Hub	₹1,500	Connects all peripherals to Mac Mini. Retained for Phase 2.
+B	Storage Media + Cables and Adapters	₹3,500	Model storage, dataset transfers, HDMI adapters, audio cables.
+C	Cloud Compute (model fine-tuning)	₹15,000	GPU credits for fine-tuning runs before on-device optimisation. One-time.
+	Benchmark Dataset Licensing / Annotation	₹12,000	Academic speech samples for model evaluation and accuracy benchmarking.
+D	Student Stipends: 5 x Rs.12,000 x 6 months	₹3,60,000	JRF base rate. No HRA or TA claimed. All work on-campus.
+E	Contingency (10% of non-stipend costs)	₹10,700	Buffer for price variation, shipping, or component replacement.
+	PHASE 1 TOTAL	₹4,77,700	
+F	Optional Extension: LHC Pilot Deployment (10 rooms)		Conditional on Phase 1 successful demonstration
+	Jetson Orin Nano x10 + HDMI hardware x10	₹4,50,000	One compute unit + capture hardware per LHC room.
+	Installation, enclosures, and cabling x10	₹50,000	Permanent installation, housing, and cable management.
+	COMBINED TOTAL  |  If Both Approved	₹9,77,700	
+
+
+
+
+LHC Pilot: What It Looks Like on the Ground
+The Lecture Hall Complex (LHC) is where the need for this is most acutely felt. DHH students attending classes there currently contend with distorted room acoustics, large lecture hall sizes, and a complete absence of real-time captioning support. The optional Phase 1 extension targets 10 smaller LHC rooms first, where audio capture complexity is more manageable, before scaling to the larger halls.
+
+Each of the 10 rooms sees a minimum of 80 students daily. The assistive unit sits inline between the classroom laptop and the projector, requiring no setup from the instructor and no special seating for the DHH student. The pilot will track caption accuracy, audio capture reliability, and student feedback across the full acoustic range of these rooms, generating the real-world data needed to confidently scale to the larger LHC halls in Phase 2.
+
+Expected Outcomes
+Accessibility Impact
+    • DHH students gain access to real-time, classroom-native captions, reducing dependence on sign language interpreters.
+    • The institution demonstrates measurable RPWD Act 2016 compliance, strengthening DEI standing with UGC and NAAC.
+    • A live pilot across 10 LHC rooms provides immediate, visible impact for the 800+ students passing through those rooms daily.
+
+Technology Contribution
+    • A validated software solution demonstrating that on-device AI can deliver accessible captioning without cloud dependency, subscription cost, or infrastructure change.
+    • A documented, replicable system architecture that any institution can adopt on existing hardware at marginal cost.
+
+Project Team
+This is a student-led initiative developed by a team of 5 B.Tech and M.Tech students with expertise spanning machine learning, systems engineering, and software development. The project is supervised by Prof. Vikram Singh, Department of Chemical Engineering, whose guidance has been instrumental in shaping both the technical direction and the accessibility focus of the work. Prof. Deepak Kumar, Dean, Diversity and Inclusion, has been deeply supportive of the initiative and continues to provide valuable direction as the project moves forward.
+
+This project aims to address the institute’s accessibility requirements and support the creation of a more inclusive academic environment.
