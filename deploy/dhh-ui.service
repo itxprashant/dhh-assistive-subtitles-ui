@@ -1,0 +1,24 @@
+[Unit]
+Description=DHH Subtitle UI (Streamlit)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=azureuser
+Group=azureuser
+WorkingDirectory=/opt/dhh-assistive-device
+Environment=PATH=/opt/dhh-assistive-device/.venv/bin
+Environment=HOME=/home/azureuser
+ExecStart=/opt/dhh-assistive-device/.venv/bin/streamlit run app.py \
+  --server.address=127.0.0.1 \
+  --server.port=8501 \
+  --server.headless=true \
+  --browser.gatherUsageStats=false \
+  --server.enableCORS=false \
+  --server.enableXsrfProtection=false
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

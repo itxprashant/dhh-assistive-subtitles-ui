@@ -13,5 +13,9 @@ hf_cache/
 # Streamlit local state.
 .streamlit/secrets.toml
 
+# VM deploy keys (never commit).
+*.pem
+myvm_key.pem
+
 
 AGENTS.md
